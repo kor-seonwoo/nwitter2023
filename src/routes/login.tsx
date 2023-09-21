@@ -46,7 +46,7 @@ export default function CreateAccount() {
             </Form>
             {error !== "" ? <Error>{error}</Error>:null}
             <Switcher>
-                Don't have an account?{""}
+                아직 계정이 없으신가요?{""}
                 <Link to="/create-account">Create one &rarr;</Link>
             </Switcher>
             <GithubButton />
