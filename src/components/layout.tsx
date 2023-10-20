@@ -1,21 +1,23 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { auth } from "../firebase";
+import RoomMakeForm from "./room-make-form";
+import { useState } from "react";
+import RoomList from "./room-list";
 
 const Wrapper = styled.div`
-    display: grid;
-    grid-template-columns: 1fr 4fr;
-    gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
     height: 100%;
     padding: 50px 0;
     width: 100%;
-    max-width: 860px;
 `;
 
 const Menu = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 150px;
     gap: 20px;
 `;
 
@@ -24,13 +26,13 @@ const MenuItem = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid #ffffff;
+    border: 2px solid #1d9bf9;
     width: 50px;
     height: 50px;
     border-radius: 50%;
     svg{
         width: 30px;
-        fill: #ffffff;
+        fill: #1d9bf9;
     }
     &.log-out{
         border-color: tomato;
@@ -40,10 +42,24 @@ const MenuItem = styled.div`
     }
 `;
 
+const Room = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 150px;
+    height: 100%;
+    overflow-y: auto;
+`;
+
+const OpenBtn = styled.button`
+    width: 100%;
+`;
+
 export default function Layout() {
+    const [roomModalOn , setRoomMoadlOn] = useState(false);
     const navigate = useNavigate();
     const onLogOut = async () => {
-        const ok = confirm("로그인을 하시겠습니까?");
+        const ok = confirm("로그아웃을 하시겠습니까?");
         if(ok){
             await auth.signOut();
             navigate("/login");
@@ -73,6 +89,11 @@ export default function Layout() {
                     </svg>
                 </MenuItem>
             </Menu>
+            <Room>
+                <RoomList />
+                <OpenBtn onClick={() => setRoomMoadlOn(true)}>+</OpenBtn>
+                {roomModalOn ? <RoomMakeForm modalDelete={setRoomMoadlOn} /> : null}
+            </Room>
             <Outlet />
         </Wrapper>
     );

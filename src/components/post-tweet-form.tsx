@@ -8,15 +8,15 @@ const Form = styled.form`
     display: flex;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
 `;
 
 const TextArea = styled.textarea`
-    border: 2px solid #ffffff;
+    border: 2px solid #1d9bf9;
     padding: 20px;
     border-radius: 20px;
     font-size: 16px;
     color: #ffffff;
-    background-color: #000000;
     width: 100%;
     resize: none;
     &::placeholder{
@@ -49,9 +49,9 @@ const AttachFileInput = styled.input`
     display: none;
 `;
 const SubmitBtn = styled.input`
-    background-color: #1d9bf9;
-    color: #ffffff;
-    border: none;
+    background-color: transparent;
+    color: #1d9bf9;
+    border: 1px solid #1d9bf9;
     padding: 10px 0;
     border-radius: 20px;
     font-size: 16px;
@@ -59,8 +59,8 @@ const SubmitBtn = styled.input`
     transition: .4s;
     &:hover,
     &:active{
-        background-color: #ffffff;
-        color: #1d9bf9;
+        background-color: #1d9bf9;
+        color: #ffffff;
     }
 `;
 

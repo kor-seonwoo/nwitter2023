@@ -3,9 +3,10 @@ import PostTweetForm from "../components/post-tweet-form";
 import Timeline from "../components/timeline";
 
 const Wrapper = styled.div`
-    display: grid;
-    grid-template-rows: 1fr 5fr;
+    display: flex;
+    flex-wrap: wrap;
     gap: 50px;
+    width: calc(100% - 300px);
     overflow-y: scroll;
     padding-right: 10px;
     &::-webkit-scrollbar{
