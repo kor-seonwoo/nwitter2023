@@ -57,6 +57,7 @@ const OpenBtn = styled.button`
 
 export default function Layout() {
     const [roomModalOn , setRoomMoadlOn] = useState(false);
+    const [roomDocId , setRoomDocId] = useState<string>("openTweet");
     const navigate = useNavigate();
     const onLogOut = async () => {
         const ok = confirm("로그아웃을 하시겠습니까?");
@@ -90,11 +91,11 @@ export default function Layout() {
                 </MenuItem>
             </Menu>
             <Room>
-                <RoomList />
+                <RoomList setRoomDocId={setRoomDocId} />
                 <OpenBtn onClick={() => setRoomMoadlOn(true)}>+</OpenBtn>
                 {roomModalOn ? <RoomMakeForm modalDelete={setRoomMoadlOn} /> : null}
             </Room>
-            <Outlet />
+            <Outlet context={{ roomDocId }} />
         </Wrapper>
     );
 }

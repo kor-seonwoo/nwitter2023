@@ -17,6 +17,10 @@ export interface IRoomMember {
     userListId: Array<string>;
 }
 
+interface RoomDocIdFormProps {
+    setRoomDocId: React.Dispatch<React.SetStateAction<string>>;
+}
+
 const Wrapper = styled.ul`
     width: 100%;
 `;
@@ -53,7 +57,7 @@ const MemberCount = styled.span`
 `;
 
 
-export default function RoomList() {
+export default function RoomList({setRoomDocId} : RoomDocIdFormProps) {
     const user = auth.currentUser;
     const [rooms, setRooms] = useState<IRoom[]>([]);
     useEffect(() => {
@@ -106,10 +110,23 @@ export default function RoomList() {
                     }
                 }else{ // 그룹 가입
                     if(confirm(`"${roomData.roomname}" 그룹에 가입하시겠습니까?`)){
-                        await updateDoc(roomRef, {
-                            userListId: arrayUnion(user.uid), // 배열에 중복값없이 값 추가 ( 중복값이라면 추가되지 않는다. )
-                            userListCnt: increment(1),
-                        });
+                        if (roomData.password === "") { // 공개 그룹
+                            await updateDoc(roomRef, {
+                                userListId: arrayUnion(user.uid), // 배열에 중복값없이 값 추가 ( 중복값이라면 추가되지 않는다. )
+                                userListCnt: increment(1),
+                            });
+                        }else{ // 비공개 그룹
+                            const passwordInput = prompt("비밀번호를 입력해주세요.");
+                            if (passwordInput === roomData.password) { // string
+                                await updateDoc(roomRef, {
+                                    userListId: arrayUnion(user.uid), // 배열에 중복값없이 값 추가 ( 중복값이라면 추가되지 않는다. )
+                                    userListCnt: increment(1),
+                                });
+                            }else{
+                                alert("비밀번호가 틀렸습니다.");
+                                return;
+                            }
+                        }
                         alert(`"${roomData.roomname}" 그룹에 가입 되었습니다.`);
                     }else{
                         alert(`"${roomData.roomname}" 그룹에 가입을 취소하였습니다.`);
@@ -144,7 +161,7 @@ export default function RoomList() {
     return (
         <Wrapper>
             <RoomLi>
-                <RoomBtn1 type="button" value="Live Feed" />
+                <RoomBtn1 type="button" onClick={() => setRoomDocId("openTweet")} value="Live Feed" />
             </RoomLi>
             {rooms.map(room => 
                 <RoomLi key={room.id}>
@@ -152,6 +169,7 @@ export default function RoomList() {
                     {`그룹개설자 : ${room.ownerusername}`}
                     <RoomBtn2 type="button" onClick={onClickRoomInOut} value={room.isMember ? "그룹 탈퇴":"그룹 가입"} data-id={room.id} />
                     {room.isOwner ? <RoomBtn2 type="button" onClick={onClickRoomDel} value="그룹 삭제" data-id={room.id} /> : null}
+                    <RoomBtn2 type="button" onClick={() => setRoomDocId(room.id)} value="입장" />
                 </RoomLi>
             )}
         </Wrapper>

@@ -1,6 +1,11 @@
 import styled from "styled-components";
 import PostTweetForm from "../components/post-tweet-form";
 import Timeline from "../components/timeline";
+import { useOutletContext } from "react-router-dom";
+
+export interface IRoomDocContext {
+    roomDocId: string;
+}
 
 const Wrapper = styled.div`
     display: flex;
@@ -28,10 +33,11 @@ const Wrapper = styled.div`
 `;
 
 export default function Home() {
+    const { roomDocId } = useOutletContext() as IRoomDocContext;
     return (
         <Wrapper>
-            <PostTweetForm />
-            <Timeline />
+            <PostTweetForm roomDocId={roomDocId} />
+            <Timeline roomDocId={roomDocId} />
         </Wrapper>
     );
 }

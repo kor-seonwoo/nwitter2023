@@ -1,9 +1,10 @@
-import { collection, limit, onSnapshot, orderBy, query } from "firebase/firestore";
+import { collection, limit, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { useState, useEffect } from "react"
 import styled from "styled-components";
 import { db } from "../firebase";
 import Tweet from "./tweet";
 import { Unsubscribe } from "firebase/auth";
+import { IRoomDocContext } from "../routes/home";
 
 export interface ITweet {
     id: string;
@@ -18,16 +19,17 @@ const Wrapper = styled.div`
     display: flex;
     gap: 10px;
     flex-direction: column;
+    width: 100%;
 `;
 
-export default function Timeline() {
+export default function Timeline({ roomDocId } : IRoomDocContext) {
     const [tweets, setTweet] = useState<ITweet[]>([]);
-
     useEffect(() => {
         let unsubscribe : Unsubscribe | null = null;
         const fetchTweets = async () => {
             const tweetsQuery = query(
                 collection(db, "tweets"),
+                where("roomDocId","==",roomDocId),
                 orderBy("createdAt", "desc"),
                 limit(25)
             );
@@ -54,7 +56,7 @@ export default function Timeline() {
         return () => {
             unsubscribe && unsubscribe();
         }
-    }, []);
+    }, [roomDocId]);
     return (
         <Wrapper>
             {tweets.map(tweet => <Tweet key={tweet.id} {...tweet}/>)}

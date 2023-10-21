@@ -3,6 +3,7 @@ import { useState } from "react"
 import { addDoc, collection, updateDoc } from "firebase/firestore";
 import { auth, db, storage } from "../firebase";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { IRoomDocContext } from "../routes/home";
 
 const Form = styled.form`
     display: flex;
@@ -64,7 +65,7 @@ const SubmitBtn = styled.input`
     }
 `;
 
-export default function PostTweetForm() {
+export default function PostTweetForm({ roomDocId } : IRoomDocContext) {
     const [isLoading, setLoading] = useState(false);
     const [tweet, setTweet] = useState("");
     const [file, setFile] = useState<File|null>(null);
@@ -88,6 +89,7 @@ export default function PostTweetForm() {
                 createdAt: Date.now(),
                 username: user.displayName || "Anonymous",
                 userId: user.uid,
+                roomDocId
             });
             if (file && file.size < 1024 ** 2) {
                 const locationRef = ref(storage, `tweets/${user.uid}/${doc.id}`);
