@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { auth, db } from "../firebase";
-import { arrayUnion, collection, doc, getDoc, increment, limit, onSnapshot, orderBy, query, updateDoc} from "firebase/firestore";
+import { arrayRemove, arrayUnion, collection, deleteDoc, doc, getDoc, increment, limit, onSnapshot, orderBy, query, updateDoc} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Unsubscribe } from "firebase/auth";
 
@@ -9,6 +9,12 @@ export interface IRoom {
     roomname: string;
     userListId: Array<string>;
     ownerusername: string;
+    isMember?: boolean;
+    isOwner?: boolean;
+}
+
+export interface IRoomMember {
+    userListId: Array<string>;
 }
 
 const Wrapper = styled.ul`
@@ -19,11 +25,18 @@ const RoomLi = styled.li`
     border-top: 1px solid #aaaaaa;
 `;
 
-const RoomBtn = styled.button`
+const RoomBtn1 = styled.input`
     width: 100%;
     padding: 15px 5px;
     text-align: left;
     background-color: transparent;
+    border: 0;
+    cursor: pointer;
+`;
+
+const RoomBtn2 = styled.input`
+    background-color: #f5f5f5;
+    text-align: left;
     border: 0;
     cursor: pointer;
 `;
@@ -53,10 +66,12 @@ export default function RoomList() {
             );
             unsubscribe = await onSnapshot(roomsQuery, (snapshot) => {
                 const rooms = snapshot.docs.map((doc) => {
-                    const {roomname, userListId, ownerusername} = doc.data();
+                    const {roomname, userListId, ownerusername, owneruserId} = doc.data();
                     return {
                         id: doc.id,
                         roomname, userListId, ownerusername,
+                        isMember: user ? userListId.includes(user.uid) : false,
+                        isOwner: user && owneruserId === user.uid ? true : false
                     }
                 });
                 setRooms(rooms);
@@ -66,20 +81,33 @@ export default function RoomList() {
         return () => {
             unsubscribe && unsubscribe();
         }
-    }, []);
-    const onClick = async (e: React.FormEvent<HTMLButtonElement>) => {
-        if (!user) return;
+    }, [user]);
+    const onClickRoomInOut = async (e: React.MouseEvent<HTMLInputElement>) => {
+        if(!user) return;
         try{
-            const roomRef = doc(db, "rooms", e.currentTarget.value);
+            const target = e.target as HTMLInputElement;
+            const roomRef = doc(db, "rooms", target.dataset.id || "");
             const roomSnap = await getDoc(roomRef);
             if (roomSnap.exists()) {
                 const roomData = roomSnap.data();
-                if (roomData.userListId.includes(user.uid)) { // 이미 그룹에 가입되어있을 때.
-                    
-                }else{ // 그룹에 신규 가입할 때.
+                if (roomData.userListId.includes(user.uid)) { // 그룹 탈퇴
+                    if(user.uid === roomData.owneruserId) { // 그룹 개설자는 그룹 탈퇴 불가능.
+                        alert(`"${roomData.roomname}" 그룹 개설자인 "${roomData.ownerusername}"님은 그룹을 탈퇴하실 수 없습니다.\n 그룹 삭제 버튼을 이용해주시기 바랍니다.`);
+                        return;
+                    }
+                    if(confirm(`"${roomData.roomname}" 그룹에서 탈퇴하시겠습니까?`)){
+                        await updateDoc(roomRef, {
+                            userListId: arrayRemove(user.uid),
+                            userListCnt: increment(-1),
+                        });
+                        alert(`"${roomData.roomname}" 그룹에서 탈퇴하였습니다.`);
+                    }else{
+                        alert(`"${roomData.roomname}" 그룹 탈퇴를 취소하였습니다.`);
+                    }
+                }else{ // 그룹 가입
                     if(confirm(`"${roomData.roomname}" 그룹에 가입하시겠습니까?`)){
                         await updateDoc(roomRef, {
-                            userListId: arrayUnion(user.uid),
+                            userListId: arrayUnion(user.uid), // 배열에 중복값없이 값 추가 ( 중복값이라면 추가되지 않는다. )
                             userListCnt: increment(1),
                         });
                         alert(`"${roomData.roomname}" 그룹에 가입 되었습니다.`);
@@ -92,17 +120,38 @@ export default function RoomList() {
             console.log(e);
         }
     }
+    const onClickRoomDel = async (e: React.MouseEvent<HTMLInputElement>) => {
+        if(!user) return;
+        try{
+            const target = e.target as HTMLInputElement;
+            const roomRef = doc(db, "rooms", target.dataset.id || "");
+            const roomSnap = await getDoc(roomRef);
+            if (roomSnap.exists()) {
+                const roomData = roomSnap.data();
+                if(user.uid === roomData.owneruserId) { // 그룹 개설자를 한번 더 검증 후 그룹 삭제
+                    if(confirm(`"${roomData.roomname}" 그룹을 정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)){
+                        await deleteDoc(roomRef);  // Delete the document
+                        alert(`"${roomData.roomname}" 그룹이 성공적으로 삭제되었습니다.`);
+                    }else{
+                        alert(`"${roomData.roomname}" 그룹 삭제가 취소되었습니다.`);
+                    }
+                }
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
     return (
         <Wrapper>
             <RoomLi>
-                <RoomBtn type="button">Live Feed</RoomBtn>
+                <RoomBtn1 type="button" value="Live Feed" />
             </RoomLi>
             {rooms.map(room => 
                 <RoomLi key={room.id}>
-                    <RoomBtn type="button" onClick={onClick} value={room.id}>
-                        <p>{room.roomname}<MemberCount>{room.userListId.length}</MemberCount></p>
-                        {`그룹개설자 : ${room.ownerusername}`}
-                    </RoomBtn>
+                    <p>{room.roomname}<MemberCount>{room.userListId.length}</MemberCount></p>
+                    {`그룹개설자 : ${room.ownerusername}`}
+                    <RoomBtn2 type="button" onClick={onClickRoomInOut} value={room.isMember ? "그룹 탈퇴":"그룹 가입"} data-id={room.id} />
+                    {room.isOwner ? <RoomBtn2 type="button" onClick={onClickRoomDel} value="그룹 삭제" data-id={room.id} /> : null}
                 </RoomLi>
             )}
         </Wrapper>
