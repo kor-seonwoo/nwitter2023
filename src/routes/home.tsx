@@ -8,9 +8,6 @@ export interface IRoomDocContext {
 }
 
 const Wrapper = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    gap: 50px;
     width: calc(100% - 300px);
     overflow-y: scroll;
     padding-right: 10px;

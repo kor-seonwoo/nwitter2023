@@ -20,6 +20,7 @@ const Wrapper = styled.div`
     gap: 10px;
     flex-direction: column;
     width: 100%;
+    margin-top: 20px;
 `;
 
 export default function Timeline({ roomDocId } : IRoomDocContext) {

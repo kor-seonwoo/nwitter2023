@@ -3,6 +3,7 @@ import { auth, db } from "../firebase";
 import { arrayRemove, arrayUnion, collection, deleteDoc, doc, getDoc, increment, limit, onSnapshot, orderBy, query, updateDoc} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Unsubscribe } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 export interface IRoom {
     id: string;
@@ -60,6 +61,7 @@ const MemberCount = styled.span`
 export default function RoomList({setRoomDocId} : RoomDocIdFormProps) {
     const user = auth.currentUser;
     const [rooms, setRooms] = useState<IRoom[]>([]);
+    const navigate = useNavigate();
     useEffect(() => {
         let unsubscribe : Unsubscribe | null = null;
         const fetchRoom = async () => {
@@ -158,6 +160,9 @@ export default function RoomList({setRoomDocId} : RoomDocIdFormProps) {
             console.log(e);
         }
     }
+    const navigateToHome = () => {
+      navigate("/");
+    };
     return (
         <Wrapper>
             <RoomLi>
@@ -169,7 +174,7 @@ export default function RoomList({setRoomDocId} : RoomDocIdFormProps) {
                     {`그룹개설자 : ${room.ownerusername}`}
                     <RoomBtn2 type="button" onClick={onClickRoomInOut} value={room.isMember ? "그룹 탈퇴":"그룹 가입"} data-id={room.id} />
                     {room.isOwner ? <RoomBtn2 type="button" onClick={onClickRoomDel} value="그룹 삭제" data-id={room.id} /> : null}
-                    <RoomBtn2 type="button" onClick={() => setRoomDocId(room.id)} value="입장" />
+                    {room.isMember ? <RoomBtn2 type="button" onClick={() => {setRoomDocId(room.id); navigateToHome(); }} value="입장" /> : null}
                 </RoomLi>
             )}
         </Wrapper>

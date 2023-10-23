@@ -1,9 +1,10 @@
 import styled from "styled-components";
 import { ITweet } from "./timeline";
 import { auth, db, storage } from "../firebase";
-import { deleteDoc, doc } from "firebase/firestore";
-import { deleteObject, getDownloadURL, getMetadata, ref } from "firebase/storage";
+import { deleteDoc, doc, onSnapshot } from "firebase/firestore";
+import { deleteObject, ref } from "firebase/storage";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 
 const Wrapper = styled.div`
@@ -17,6 +18,7 @@ const ColumnUser = styled.div`
     align-items: center;
     justify-content: space-between;
     gap: 10px;
+    cursor: pointer;
     > div{
         display: flex;
         align-items: center;
@@ -89,10 +91,12 @@ const DateTxt = styled.p`
     margin-top: 20px;
 `;
 
-export default function Tweet({username, photo, tweet, userId, id, createdAt}:ITweet) {
+export default function Tweet({ username, photo, tweet, userId, id, createdAt}:ITweet) {
+    const navigate = useNavigate();
     const user = auth.currentUser;
     const [avatar, setAvatar] = useState("");
-    const avatarRef = ref(storage, `avatar/${userId}`);
+    const [name, setName] = useState(username);
+    const docRefUserList = doc(db, 'userList', userId);
     const currentDate = new Date(createdAt);
     const onDelete = async () => {
         const ok = confirm("게시물을 삭제하시겠습니까?");
@@ -109,23 +113,26 @@ export default function Tweet({username, photo, tweet, userId, id, createdAt}:IT
 
         }
     };
-    const urlDown = async () => {
-        try {
-            const metadata = await getMetadata(avatarRef);
-            if (metadata) {
-                const tryUrl = await getDownloadURL(avatarRef);
-                setAvatar(tryUrl);
-            } else {
-                console.log('프로필 이미지가 없습니다.');
+    const urlDown = () => {
+        const unsub = onSnapshot(docRefUserList, (doc) => {
+            if (doc.exists()) {
+                const { hasProfileImage } = doc.data();
+                setAvatar(hasProfileImage);
             }
-        } catch (error) {
-            if (error && typeof error === 'object' && 'code' in error && error.code === 'storage/object-not-found') {
-                console.log('프로필 이미지가 없습니다.');
-            } else {
-                console.error(error);
-            }
-        }
+        });
+        return unsub;
     }
+    const fetchUser = () => {
+        const unsub = onSnapshot(docRefUserList, (doc) => {
+            if (doc.exists()) {
+                const { name } = doc.data();
+                setName(name);
+            } else {
+                setName(username);
+            }
+        });
+        return unsub;
+    };
     function dateFormat(date: Date): string {
         let month: number | string = date.getMonth() + 1;
         let day: number | string = date.getDate();
@@ -141,12 +148,21 @@ export default function Tweet({username, photo, tweet, userId, id, createdAt}:IT
     
         return date.getFullYear() + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second;
     }
+    const goToProfile = () => {
+        navigate(`/profile/${userId}`);
+    };
     useEffect(() => {
-        urlDown();
+        const unsubFetchUser = fetchUser();
+        const unsubUrlDown = urlDown();
+    
+        return () => {
+            unsubFetchUser();
+            unsubUrlDown();
+        };
     }, [userId]);
     return (
         <Wrapper>
-            <ColumnUser>
+            <ColumnUser onClick={goToProfile}>
                 <div>
                     <Circle>
                         {avatar ? 
@@ -157,7 +173,7 @@ export default function Tweet({username, photo, tweet, userId, id, createdAt}:IT
                         </svg>
                         }
                     </Circle>
-                    <Username>{username}</Username>
+                    <Username>{name}</Username>
                 </div>
                 {user?.uid === userId ? <DeleteButton onClick={onDelete}>삭제</DeleteButton> : null}
             </ColumnUser>
@@ -165,7 +181,7 @@ export default function Tweet({username, photo, tweet, userId, id, createdAt}:IT
                 <Photo src={photo}></Photo>
             </ColumnImg> : null}
             <ColumnTxt>
-                <Payload><b>{username}</b>&nbsp; {tweet}</Payload>
+                <Payload><b>{name}</b>&nbsp; {tweet}</Payload>
                 <DateTxt>{dateFormat(currentDate)}</DateTxt>
             </ColumnTxt>
         </Wrapper>

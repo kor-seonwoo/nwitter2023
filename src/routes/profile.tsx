@@ -3,9 +3,11 @@ import { auth, db, storage } from "../firebase";
 import { useEffect, useState } from "react";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { updateProfile } from "firebase/auth";
-import { collection, getDocs, limit, orderBy, query, where } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, limit, orderBy, query, updateDoc, where } from "firebase/firestore";
 import { ITweet } from "../components/timeline";
 import Tweet from "../components/tweet";
+import { useParams } from "react-router-dom";
+import { IRoom } from "../components/room-list";
 
 const Wrapper = styled.div`
     display: flex;
@@ -93,30 +95,64 @@ const Tweets = styled.div`
 `;
 
 export default function Profile() {
+    const params = useParams();
+    const uid = params.uid as string;
     const user = auth.currentUser;
-    const [avatar, setAvatar] = useState(user?.photoURL);
+    const docRefUserList = doc(db, 'userList', uid);
+    const [avatar, setAvatar] = useState("");
     const [tweets, setTweets] = useState<ITweet[]>([]);
     const [isOnOff, setOnOff] = useState(false);
-    const [newName, setNewName] = useState(user?.displayName);
-    const [currName, setCurrName] = useState(user?.displayName);
+    const [newName, setNewName] = useState("");
+    const [currName, setCurrName] = useState("");
+    const [groups, setGroups] = useState<IRoom[]>([]);
     const onAvatarChange = async (e : React.ChangeEvent<HTMLInputElement>) => {
         const {files} = e.target;
         if (!user) return;
         if (files && files.length === 1) {
             const file = files[0];
-            const locationRef = ref(storage, `avatar/${user?.uid}`);
+            const locationRef = ref(storage, `avatar/${uid}`);
             const result = await uploadBytes(locationRef, file);
             const avatarUrl = await getDownloadURL(result.ref);
             setAvatar(avatarUrl);
             await updateProfile(user, {
                 photoURL: avatarUrl,
             });
+            await updateDoc(docRefUserList, {
+                hasProfileImage: avatarUrl,
+            });
+        }
+    };
+    const fetchUser = async () => {
+        const docSnapshot = await getDoc(docRefUserList);
+        if (docSnapshot.exists()) {
+            const { hasProfileImage, name } = docSnapshot.data();
+            setCurrName(name);
+            setAvatar(hasProfileImage);
+        } else {
+            console.log("회원이 없습니다.");
+        }
+    };
+    const fetchGroups = async () => {
+        try {
+            const groupQuery = query(
+                collection(db, "rooms"),
+                where("userListId", "array-contains", uid),
+            );
+            const snapshot = await getDocs(groupQuery);
+            const groupsData: IRoom[] = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            } as IRoom));
+            setGroups(groupsData);
+        } catch (e) {
+            console.log(e);
         }
     };
     const fetchTweets = async () => {
         const tweetQuery = query(
             collection(db, "tweets"),
-            where("userId", "==", user?.uid),
+            where("userId", "==", uid),
+            where("roomDocId", "==", "openTweet"),
             orderBy("createdAt", "desc"),
             limit(25)
         );
@@ -131,8 +167,10 @@ export default function Profile() {
         setTweets(tweets);
     };
     useEffect(() => {
+        fetchUser();
+        fetchGroups();
         fetchTweets();
-    },[]);
+    },[uid]);
 
     const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setNewName(e.target.value);
@@ -143,6 +181,9 @@ export default function Profile() {
         try{
             await updateProfile(user, {
                 displayName: newName,
+            });
+            await updateDoc(docRefUserList, {
+                name: newName,
             });
             setCurrName(newName);
         } catch (e) {
@@ -160,19 +201,33 @@ export default function Profile() {
                 </svg>
                 }
             </AvatarUpload>
-            <AvatarInput onChange={onAvatarChange} id="avater" type="file" accept="image/*" />
+            {user?.uid === uid ? <AvatarInput onChange={onAvatarChange} id="avater" type="file" accept="image/*" /> : null}
             <Name>
                 {currName ?? "Anonymous"} 
-                <NameButton onClick={() => setOnOff(isOnOff => !isOnOff)}>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                    </svg>
-                </NameButton>
-                <NameModal onSubmit={onsubmit} className={isOnOff ? "on":""}>
-                    <NameInput onChange={onChange} name="name" type="text" maxLength={10} required />
-                    <NameSubmit onClick={() => setOnOff(false)} type="submit" value="수정" />
-                </NameModal>
+                {user?.uid === uid ?
+                <>
+                    <NameButton onClick={() => setOnOff(isOnOff => !isOnOff)}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                        </svg>
+                    </NameButton>
+                    <NameModal onSubmit={onsubmit} className={isOnOff ? "on":""}>
+                        <NameInput onChange={onChange} name="name" type="text" maxLength={10} required />
+                        <NameSubmit onClick={() => setOnOff(false)} type="submit" value="수정" />
+                    </NameModal>
+                </>
+                :
+                null
+                }
             </Name>
+            <h2>가입된 그룹</h2>
+            {groups.length === 0 ? (
+            <p>가입중인 그룹이 없습니다.</p>
+            ) : groups.length === 1 ? (
+            <p>{`${groups[0].roomname} 그룹 가입중`}</p>
+            ) : (
+            <p>{`${groups[0].roomname} 그룹 외 ${groups.length - 1}개의 그룹 가입중`}</p>
+            )}
             <Tweets>
                 {tweets.map((tweet) => <Tweet key={tweet.id} {...tweet} />)}
             </Tweets>

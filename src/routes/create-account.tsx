@@ -1,9 +1,10 @@
 import { useState } from "react"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { Link, useNavigate } from "react-router-dom";
 import { FirebaseError } from "firebase/app";
 import { Error, Form, Input, Switcher, Title, Wrapper } from "../components/auth-components";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function CreateAccount() {
     const navigate = useNavigate();
@@ -31,6 +32,12 @@ export default function CreateAccount() {
             const credentials =  await createUserWithEmailAndPassword(auth, email, password);
             await updateProfile(credentials.user, {
                 displayName: name,
+            });
+            let docRef = doc(db,'userList',credentials.user.uid);
+            await setDoc(docRef,{
+                name:name,
+                email:email,
+                hasProfileImage:false,
             });
             navigate("/");
         } catch (e) {
