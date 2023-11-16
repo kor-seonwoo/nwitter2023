@@ -1,64 +1,163 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import RoomMakeForm from "./room-make-form";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import RoomList from "./room-list";
+import { doc, getDoc } from "firebase/firestore";
 
 const Wrapper = styled.div`
     display: flex;
     flex-wrap: wrap;
-    height: 100%;
-    padding: 50px 0;
     width: 100%;
+    height: 100%;
 `;
 
 const Menu = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 150px;
-    gap: 20px;
+    width: 260px;
+    height: 100%;
+    padding: 20px;
+    border-right: 1px solid #C2C2C2;
+    @media screen and (max-width: 560px){
+        width: 48%;
+        padding: 10px;
+    }
 `;
 
-const MenuItem = styled.div`
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid #1d9bf9;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    svg{
-        width: 30px;
-        fill: #1d9bf9;
+const Nav = styled.nav`
+    position: relative;
+    width: 100%;
+    padding-bottom: 24px;
+    &::before{
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        transform: translateX(-50%);
+        width: calc(100% + 40px);
+        height: 1px;
+        background-color: #C2C2C2;
     }
-    &.log-out{
-        border-color: tomato;
-        svg{
-            fill: tomato;
+    @media screen and (max-width: 560px){
+        padding-bottom: 20px;
+        &::before{
+            width: calc(100% + 20px);
+        }
+        > h1{
+            width: 80px;
+            img{
+                width: 100%;
+            }
         }
     }
 `;
 
-const Room = styled.div`
+const CurrentUserBox = styled.div`
     display: flex;
-    flex-direction: column;
     align-items: center;
-    width: 150px;
-    height: 100%;
-    overflow-y: auto;
+    gap: 18px;
+    width: 100%;
+    margin: 45px 0 16px; 
+    .icon{
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        background-color: #E2E2E2;
+        border: 1px solid #E2E2E2;
+        border-radius: 50%;
+        overflow: hidden;
+        > img{
+            width: 100%;
+        }
+        > svg{
+            height: 36px;
+            margin-bottom: -5px;
+            color: #AAAAAA;
+        }
+    }
+    .name{
+        font-size: 20px;
+        font-weight: 600;
+    }
+    @media screen and (max-width: 560px){
+        margin: 18px 0 10px;
+        .icon{
+            width: 30px;
+            height: 30px;
+            > svg{
+                height: 30px;
+            }
+        }
+        .name{
+            font-size: 17px;
+        }
+    }
 `;
 
-const OpenBtn = styled.button`
+const MenuItem = styled.div`
     width: 100%;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #515151;
+    cursor: pointer;
+    &:hover{
+        background-color: #E2E2E2;
+    }
+`;
+
+const Room = styled.div`
+    width: 100%;
+    padding: 24px 0 90px;
+`;
+
+interface OpenBtnProps {
+    bgcolor: string;
+    fontcolor: string;
+    bordercolor? :string;
+}
+
+const OpenBtn = styled.button<OpenBtnProps>`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 39px;
+    padding: 0 10px;
+    border: 1px solid ${(props) => props.bordercolor ? props.bordercolor : props.bgcolor};
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: left;
+    background-color: ${(props) => props.bgcolor};
+    color: ${(props) => props.fontcolor};
+    cursor: pointer;
+    margin-bottom: 10px;
+    &:hover{
+        opacity: .8;
+    }
+    > span{
+        font-size: 22px;
+    }
+    @media screen and (max-width: 560px){
+        height: 34px;
+        font-size: 14px;
+        > span{
+            font-size: 18px;
+        }
+    }
 `;
 
 export default function Layout() {
     const user = auth.currentUser;
+    const docRefUserList = doc(db, 'userList', user?.uid as string);
     const [roomModalOn , setRoomMoadlOn] = useState(false);
+    const [tweetModalOn , setTweetMoadlOn] = useState(false);
     const [roomDocId , setRoomDocId] = useState<string>("openTweet");
+    const [avatar, setAvatar] = useState("");
     const navigate = useNavigate();
     const profileLink = useMemo(() => `/profile/${user?.uid}`, [user?.uid]);
     const onLogOut = async () => {
@@ -68,36 +167,51 @@ export default function Layout() {
             navigate("/login");
         }
     }
+    const fetchUser = async () => {
+        const docSnapshot = await getDoc(docRefUserList);
+        if (docSnapshot.exists()) {
+            const { hasProfileImage } = docSnapshot.data();
+            setAvatar(hasProfileImage);
+        } else {
+            console.log("회원이 없습니다.");
+        }
+    };
+    useEffect(() => {
+        fetchUser();
+    });
     return (
         <Wrapper>
             <Menu>
-                <Link to="/">
-                    <MenuItem>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                            <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
-                        </svg>
-                    </MenuItem>
-                </Link>
-                <Link to={profileLink}>
-                    <MenuItem>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                            <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
-                        </svg>
-                    </MenuItem>
-                </Link>
-                <MenuItem onClick={onLogOut} className="log-out">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                        <path fillRule="evenodd" d="M3 4.25A2.25 2.25 0 015.25 2h5.5A2.25 2.25 0 0113 4.25v2a.75.75 0 01-1.5 0v-2a.75.75 0 00-.75-.75h-5.5a.75.75 0 00-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 00.75-.75v-2a.75.75 0 011.5 0v2A2.25 2.25 0 0110.75 18h-5.5A2.25 2.25 0 013 15.75V4.25z" clipRule="evenodd" />
-                        <path fillRule="evenodd" d="M19 10a.75.75 0 00-.75-.75H8.704l1.048-.943a.75.75 0 10-1.004-1.114l-2.5 2.25a.75.75 0 000 1.114l2.5 2.25a.75.75 0 101.004-1.114l-1.048-.943h9.546A.75.75 0 0019 10z" clipRule="evenodd" />
-                    </svg>
-                </MenuItem>
+                <Nav>
+                    <h1>
+                        <Link to="/">
+                            <img src="/public/logo.png" alt="무엇이든 적어보살" />
+                        </Link>
+                    </h1>
+                    <CurrentUserBox>
+                        <span className="icon">
+                            {avatar ?
+                            <img src={avatar} alt="프로필 사진" />
+                            :
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                                <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
+                            </svg>
+                            }
+                        </span>
+                        <p className="name">{user?.displayName}</p>
+                    </CurrentUserBox>
+                    <Link to={profileLink}><MenuItem>프로필</MenuItem></Link>
+                    <MenuItem onClick={onLogOut} className="log-out">로그아웃</MenuItem>
+                </Nav>
+                <Room>
+                    <OpenBtn onClick={() => setTweetMoadlOn(!tweetModalOn)} bgcolor="#1D9BF9" fontcolor="#ffffff">게시물 작성 <span>+</span></OpenBtn>
+                    <OpenBtn onClick={() => setRoomMoadlOn(true)} bgcolor="#ffffff" fontcolor="#1D9BF9" bordercolor="#1D9BF9">그룹 만들기 <span>+</span></OpenBtn>
+                    <OpenBtn onClick={() => setRoomDocId("openTweet")} bgcolor="#E2E2E2" fontcolor="#1D1D1F">홈</OpenBtn>
+                    <RoomList setRoomDocId={setRoomDocId} />
+                    {roomModalOn ? <RoomMakeForm modalDelete={setRoomMoadlOn} /> : null}
+                </Room>
             </Menu>
-            <Room>
-                <RoomList setRoomDocId={setRoomDocId} />
-                <OpenBtn onClick={() => setRoomMoadlOn(true)}>+</OpenBtn>
-                {roomModalOn ? <RoomMakeForm modalDelete={setRoomMoadlOn} /> : null}
-            </Room>
-            <Outlet context={{ roomDocId }} />
+            <Outlet context={{ tweetModalOn, roomDocId }} />
         </Wrapper>
     );
 }

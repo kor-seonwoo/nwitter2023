@@ -44,14 +44,46 @@ const GlobalStyles = createGlobalStyle`
   ${reset};
   *{
     box-sizing: border-box;
+    margin: 0; padding: 0;
   }
   body{
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: "Pretendard";
+    font-size: 16px;
+    color: #1D1D1F;
+    word-break: keep-all;
+  }
+  a{
+    text-decoration: none;
+  }
+  @font-face {
+    font-family: "Pretendard";
+    font-weight: 600;
+    src: url("/public/fonts/Pretendard-Bold.otf") format("otf"),
+    url("/public/fonts/Pretendard-Bold.ttf") format("ttf"),
+    url("/public/fonts/Pretendard-Bold.woff") format("woff"),
+    url("/public/fonts/Pretendard-Bold.woff2") format("woff2");
+  }
+  @font-face {
+    font-family: "Pretendard";
+    font-weight: 500;
+    src: url("/public/fonts/Pretendard-Medium.otf") format("otf"),
+    url("/public/fonts/Pretendard-Medium.ttf") format("ttf"),
+    url("/public/fonts/Pretendard-Medium.woff") format("woff"),
+    url("/public/fonts/Pretendard-Medium.woff2") format("woff2");
+  }
+  @font-face {
+    font-family: "Pretendard";
+    font-weight: 400;
+    src: url("/public/fonts/Pretendard-Regular.otf") format("otf"),
+    url("/public/fonts/Pretendard-Regular.ttf") format("ttf"),
+    url("/public/fonts/Pretendard-Regular.woff") format("woff"),
+    url("/public/fonts/Pretendard-Regular.woff2") format("woff2");
   }
 `;
 
 const Wrapper = styled.div`
   height: 100vh;
+  overflow: hidden;
 `;
 
 function App() {

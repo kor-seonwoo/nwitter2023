@@ -6,23 +6,31 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { IRoomDocContext } from "../routes/home";
 
 const Form = styled.form`
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    width: calc(100% - 20px);
+    max-width: 560px;
+    padding: 15px;
+    background-color: #ffffff;
+    box-shadow: 2px 2px 8px rgba(42,42,42,0.2);
+    > .inner{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        margin-top: 10px;
+    }
 `;
 
 const TextArea = styled.textarea`
-    border: 2px solid #1d9bf9;
-    padding: 20px;
-    border-radius: 20px;
-    font-size: 16px;
-    color: #ffffff;
+    border: 2px solid #E2E2E2;
     width: 100%;
+    padding: 20px;
+    font-size: 16px;
     resize: none;
     &::placeholder{
         font-size: 16px;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
     &:focus {
         outline: none;
@@ -31,15 +39,16 @@ const TextArea = styled.textarea`
 `;
 
 const AttachFileButton = styled.label`
-    padding: 10px 0;
-    color: #1d9bf9;
-    text-align: center;
-    border-radius: 20px;
+    display: inline-block;
+    width: 100px;
+    height: 30px;
+    line-height: 30px;
     border: 1px solid #1d9bf9;
-    font-size: 14px;
+    text-align: center;
+    font-size: 15px;
     font-weight: 600;
+    color: #1d9bf9;
     cursor: pointer;
-    transition: .4s;
     &:hover{
         background-color: #1d9bf9;
         color: #ffffff;
@@ -49,15 +58,17 @@ const AttachFileButton = styled.label`
 const AttachFileInput = styled.input`
     display: none;
 `;
+
 const SubmitBtn = styled.input`
-    background-color: transparent;
-    color: #1d9bf9;
+    width: 100px;
+    height: 30px;
+    line-height: 30px;
+    background-color: #ffffff;
     border: 1px solid #1d9bf9;
-    padding: 10px 0;
-    border-radius: 20px;
-    font-size: 16px;
+    color: #1d9bf9;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
-    transition: .4s;
     &:hover,
     &:active{
         background-color: #1d9bf9;
@@ -109,10 +120,12 @@ export default function PostTweetForm({ roomDocId } : IRoomDocContext) {
     }
     return (
         <Form onSubmit={onSubmit}>
-            <TextArea rows={5} maxLength={200} onChange={onChange} value={tweet} placeholder="what is happening?" required />
-            <AttachFileButton htmlFor="file">{file ? "Photo added ✔":"Add photo"}</AttachFileButton>
-            <AttachFileInput onChange={onFileChange} type="file" id="file" accept="image/*" />
-            <SubmitBtn type="submit" value={isLoading ? "Posting...":"Post Tweet"} />
+            <TextArea rows={5} maxLength={200} onChange={onChange} value={tweet} placeholder="당신의 이야기를 적어주세요." required />
+            <div className="inner">
+                <AttachFileButton htmlFor="file">{file ? "사진 선택 ✔":"사진 추가"}</AttachFileButton>
+                <AttachFileInput onChange={onFileChange} type="file" id="file" accept="image/*" />
+                <SubmitBtn type="submit" value={isLoading ? "작성중...":"작성"} />
+            </div>
         </Form>
     )
 }

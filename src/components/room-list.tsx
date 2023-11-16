@@ -22,41 +22,117 @@ interface RoomDocIdFormProps {
     setRoomDocId: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const Wrapper = styled.ul`
+const Wrapper = styled.div`
+    width: 100%;
+    height: 470px;
+    padding-bottom: 30px;
+    overflow-y: auto;
+    &::-webkit-scrollbar{
+        width: 3px;
+    }
+    &::-webkit-scrollbar-thumb{
+        background: #E2E2E2; 
+    }
+    &::-webkit-scrollbar-track{
+        background: #ffffff;
+    }
+    // 모질라 파이어폭스용 css
+    scrollbar-width: thin;
+    scrollbar-color: #E2E2E2 #ffffff;
+    // ie용 css
+    scrollbar-face-color: #E2E2E2;
+    scrollbar-track-color: #ffffff;
+    @media screen and (max-width: 560px){
+        height: 332px;
+    }
+`;
+
+const RoomUl = styled.ul`
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     width: 100%;
 `;
 
 const RoomLi = styled.li`
-    border-top: 1px solid #aaaaaa;
+    width: 100%;
+    padding: 10px;
+    .inforBox1{
+        font-size: 16px;
+        font-weight: 500;
+        color: #515151;
+    }
+    hr{
+        width: 100%;
+        height: 0;
+        border-top: 1px solid #7D7D7D;
+        margin: 10px 0;
+    }
+    .inforBox2{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 400;
+        color: #515151;
+    }
+    @media screen and (max-width: 560px){
+        padding: 10px 5px;
+        .inforBox1{
+            font-size: 14px;
+        }
+    }
+`;
+
+const RoomBtn = styled.div`
+    width: 100%;
+    margin-top: 10px;
+    .inner{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
 `;
 
 const RoomBtn1 = styled.input`
     width: 100%;
-    padding: 15px 5px;
-    text-align: left;
+    padding: 6px;
+    border: 1px solid #1D9BF9;
     background-color: transparent;
-    border: 0;
-    cursor: pointer;
-`;
-
-const RoomBtn2 = styled.input`
-    background-color: #f5f5f5;
-    text-align: left;
-    border: 0;
-    cursor: pointer;
-`;
-
-const MemberCount = styled.span`
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    line-height: 20px;
-    background-color: #aaaaaa;
-    border-radius: 50%;
+    border-radius: 2px;
     font-size: 12px;
-    text-align: center;
+    font-size: 400;
+    color: #1D9BF9;
+    cursor: pointer;
+    &:hover{
+        opacity: .8;
+        background-color: #1D9BF9;
+        color: #ffffff;
+    }
 `;
 
+interface RoomBtn2Props {
+    bgcolor?: string;
+    bordercolor?: string;
+}
+
+const RoomBtn2 = styled.input<RoomBtn2Props>`
+    width: calc(50% - 5px);
+    padding: 6px 0;
+    background-color: ${(props) => props.bgcolor ? props.bgcolor : "transparent"};
+    border: 1px solid ${(props) => props.bordercolor ? props.bordercolor : "transparent"};
+    border-radius: 2px;
+    font-size: 12px;
+    font-weight: 400;
+    color: ${(props) => props.bordercolor ? props.bordercolor : "#ffffff"};
+    cursor: pointer;
+    &:hover{
+        opacity: .8;
+    }
+    @media screen and (max-width: 560px){
+        padding: 4px 0;
+    }
+`;
 
 export default function RoomList({setRoomDocId} : RoomDocIdFormProps) {
     const user = auth.currentUser;
@@ -163,20 +239,38 @@ export default function RoomList({setRoomDocId} : RoomDocIdFormProps) {
     const navigateToHome = () => {
       navigate("/");
     };
+    const numberPad = (n:string, width:number) => {
+        n = n + '';
+        return n.length >= width ? n : new Array(width - n.length + 1).join('0') + n;
+      }
     return (
         <Wrapper>
-            <RoomLi>
-                <RoomBtn1 type="button" onClick={() => setRoomDocId("openTweet")} value="Live Feed" />
-            </RoomLi>
-            {rooms.map(room => 
-                <RoomLi key={room.id}>
-                    <p>{room.roomname}<MemberCount>{room.userListId.length}</MemberCount></p>
-                    {`그룹개설자 : ${room.ownerusername}`}
-                    <RoomBtn2 type="button" onClick={onClickRoomInOut} value={room.isMember ? "그룹 탈퇴":"그룹 가입"} data-id={room.id} />
-                    {room.isOwner ? <RoomBtn2 type="button" onClick={onClickRoomDel} value="그룹 삭제" data-id={room.id} /> : null}
-                    {room.isMember ? <RoomBtn2 type="button" onClick={() => {setRoomDocId(room.id); navigateToHome(); }} value="입장" /> : null}
-                </RoomLi>
-            )}
+            <RoomUl>
+                {rooms.map(room => 
+                    <RoomLi key={room.id}>
+                        <p className="inforBox1">{room.roomname}</p>
+                        <hr />
+                        <p className="inforBox2">
+                            <span>{`그룹개설자 : ${room.ownerusername}`}</span>
+                            <span>{`회원수 : ${numberPad(room.userListId.length.toString(),2)}`}</span>
+                        </p>
+                        <RoomBtn>
+                            {!room.isMember ?
+                            <RoomBtn1 type="button" onClick={onClickRoomInOut} value="그룹 가입" data-id={room.id} />
+                            :    
+                            <div className="inner">
+                                {room.isOwner ? 
+                                <RoomBtn2 type="button" onClick={onClickRoomDel} value="그룹 삭제" data-id={room.id} bordercolor="#f50404"/> 
+                                : 
+                                <RoomBtn2 type="button" onClick={onClickRoomInOut} value="그룹 탈퇴" data-id={room.id} bordercolor="#AAAAAA" />
+                                }
+                                <RoomBtn2 type="button" onClick={() => {setRoomDocId(room.id); navigateToHome(); }} value="그룹 입장" bgcolor="#7D7D7D" />
+                            </div>
+                            }
+                        </RoomBtn>
+                    </RoomLi>
+                )}
+            </RoomUl>
         </Wrapper>
     )
 }

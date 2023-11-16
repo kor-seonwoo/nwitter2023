@@ -17,10 +17,56 @@ export interface ITweet {
 
 const Wrapper = styled.div`
     display: flex;
-    gap: 10px;
-    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 47px 41px;
     width: 100%;
-    margin-top: 20px;
+    @media screen and (max-width: 1400px) {
+        gap: 30px 10px;
+    }
+    @media screen and (max-width: 1024px) {
+        gap: 15px 0;
+    }
+`;
+
+const Empty = styled.div`
+    width: 100%;
+    text-align: center;
+    > span{
+        display: block;
+        font-size: 150px;
+    }
+    > p{
+        font-size: 30px;
+        font-weight: 500;
+        line-height: 1.3;
+        margin-top: 30px;
+        img{
+            vertical-align: middle;
+            width: 180px;
+        }
+    }
+    @media screen and (max-width: 1024px) {
+        padding-top: 30px;
+        > span{
+            font-size: 70px;
+        }
+        > p{
+            font-size: 18px;
+            margin-top: 20px;
+            img{
+                width: 100px;
+            }
+        }
+    }
+    @media screen and (max-width: 370px) {
+        > p{
+            img{
+                display: block;
+                width: 90%;
+                margin: 0 auto 5px;
+            }
+        }
+    }
 `;
 
 export default function Timeline({ roomDocId } : IRoomDocContext) {
@@ -58,9 +104,19 @@ export default function Timeline({ roomDocId } : IRoomDocContext) {
             unsubscribe && unsubscribe();
         }
     }, [roomDocId]);
+    console.log(tweets);
     return (
         <Wrapper>
-            {tweets.map(tweet => <Tweet key={tweet.id} {...tweet}/>)}
+            {tweets.length === 0 ?
+            <Empty>
+                <span>🎨</span> 
+                <p><img src="/public/btn01.jpg" alt="게시물 작성" /> 버튼을 눌러 <br />
+                    게시물을 작성해주세요!
+                </p>
+            </Empty>
+            :
+            tweets.map(tweet => <Tweet key={tweet.id} {...tweet}/>)
+            }
         </Wrapper>
     );
 }
