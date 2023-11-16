@@ -185,7 +185,7 @@ export default function Layout() {
                 <Nav>
                     <h1>
                         <Link to="/" onClick={() => setRoomDocId("openTweet")}>
-                            <img src="/public/logo.png" alt="무엇이든 적어보살" />
+                            <img src={import.meta.env.VITE_PUBLIC_URL + "/logo.png"} alt="무엇이든 적어보살" />
                         </Link>
                     </h1>
                     <CurrentUserBox>

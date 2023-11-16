@@ -104,13 +104,12 @@ export default function Timeline({ roomDocId } : IRoomDocContext) {
             unsubscribe && unsubscribe();
         }
     }, [roomDocId]);
-    console.log(tweets);
     return (
         <Wrapper>
             {tweets.length === 0 ?
             <Empty>
                 <span>🎨</span> 
-                <p><img src="/public/btn01.jpg" alt="게시물 작성" /> 버튼을 눌러 <br />
+                <p><img src={import.meta.env.VITE_PUBLIC_URL + "/btn01.jpg"} alt="게시물 작성" /> 버튼을 눌러 <br />
                     게시물을 작성해주세요!
                 </p>
             </Empty>
