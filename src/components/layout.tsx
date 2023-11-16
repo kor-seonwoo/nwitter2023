@@ -184,7 +184,7 @@ export default function Layout() {
             <Menu>
                 <Nav>
                     <h1>
-                        <Link to="/">
+                        <Link to="/" onClick={() => setRoomDocId("openTweet")}>
                             <img src="/public/logo.png" alt="무엇이든 적어보살" />
                         </Link>
                     </h1>
