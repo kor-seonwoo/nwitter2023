@@ -152,10 +152,7 @@ const GropList = styled.div`
     }
 `;
 
-const Tweets = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    gap: 47px 41px;
+const TweetsScroll = styled.div`
     width: 100%;
     height: calc(100% - 210px);
     overflow-y: scroll;
@@ -174,6 +171,13 @@ const Tweets = styled.div`
     // ie용 css
     scrollbar-face-color: #E2E2E2;
     scrollbar-track-color: #ffffff;
+`;
+
+const Tweets = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 47px 41px;
+    width: 100%;
     @media screen and (max-width: 1400px) {
         gap: 30px 10px;
     }
@@ -216,8 +220,9 @@ export default function Profile() {
             const { hasProfileImage, name } = docSnapshot.data();
             setCurrName(name);
             setAvatar(hasProfileImage);
-        } else {
-            console.log("회원이 없습니다.");
+        } else { // 소셜회원
+            setCurrName(user?.displayName as string);
+            setAvatar(user?.photoURL as string);
         }
     };
     const fetchGroups = async () => {
@@ -292,7 +297,7 @@ export default function Profile() {
                 </AvatarUpload>
                 {user?.uid === uid ? <AvatarInput onChange={onAvatarChange} id="avater" type="file" accept="image/*" /> : null}
                 <Name>
-                    {currName ?? "Anonymous"} 
+                    {currName} 
                     {user?.uid === uid ?
                     <>
                         <NameButton onClick={() => setOnOff(isOnOff => !isOnOff)}>
@@ -320,9 +325,11 @@ export default function Profile() {
                     )}
                 </GropList>
             </div>
-            <Tweets>
-                {tweets.map((tweet) => <Tweet key={tweet.id} {...tweet} />)}
-            </Tweets>
+            <TweetsScroll>
+                <Tweets>
+                    {tweets.map((tweet) => <Tweet key={tweet.id} {...tweet} />)}
+                </Tweets>
+            </TweetsScroll>
         </Wrapper>
     );
 }

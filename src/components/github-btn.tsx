@@ -4,18 +4,16 @@ import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
 
 const Button = styled.span`
-    margin-top: 50px;
-    background-color: white;
-    font-weight: 600;
-    padding: 10px 20px;
-    border-radius: 50px;
-    border: 0;
-    width: 100%;
-    color: #000000;
     display: flex;
-    gap: 5px;
     align-items: center;
     justify-content: center;
+    gap: 5px;
+    width: 100%;
+    padding: 10px;
+    background-color: #E2E2E2;
+    margin-top: 50px;
+    border: 0;
+    font-weight: 600;
     cursor: pointer;
 `;
 
@@ -37,7 +35,7 @@ export default function GithubButton() {
     return (
         <Button onClick={onClick}>
             <Logo src="/github-logo.svg" />
-            Continue with Github
+            Github 계정으로 이용
         </Button>
     );
 }

@@ -172,8 +172,8 @@ export default function Layout() {
         if (docSnapshot.exists()) {
             const { hasProfileImage } = docSnapshot.data();
             setAvatar(hasProfileImage);
-        } else {
-            console.log("회원이 없습니다.");
+        } else { // 소셜회원
+            setAvatar(user?.photoURL as string);
         }
     };
     useEffect(() => {
@@ -206,7 +206,7 @@ export default function Layout() {
                 <Room>
                     <OpenBtn onClick={() => setTweetMoadlOn(!tweetModalOn)} bgcolor="#1D9BF9" fontcolor="#ffffff">게시물 작성 <span>+</span></OpenBtn>
                     <OpenBtn onClick={() => setRoomMoadlOn(true)} bgcolor="#ffffff" fontcolor="#1D9BF9" bordercolor="#1D9BF9">그룹 만들기 <span>+</span></OpenBtn>
-                    <OpenBtn onClick={() => setRoomDocId("openTweet")} bgcolor="#E2E2E2" fontcolor="#1D1D1F">홈</OpenBtn>
+                    <Link to="/" onClick={() => setRoomDocId("openTweet")}><OpenBtn bgcolor="#E2E2E2" fontcolor="#1D1D1F">홈</OpenBtn></Link>
                     <RoomList setRoomDocId={setRoomDocId} />
                     {roomModalOn ? <RoomMakeForm modalDelete={setRoomMoadlOn} /> : null}
                 </Room>

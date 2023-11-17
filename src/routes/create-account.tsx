@@ -33,7 +33,7 @@ export default function CreateAccount() {
             await updateProfile(credentials.user, {
                 displayName: name,
             });
-            let docRef = doc(db,'userList',credentials.user.uid);
+            const docRef = doc(db,'userList',credentials.user.uid);
             await setDoc(docRef,{
                 name:name,
                 email:email,
@@ -50,17 +50,17 @@ export default function CreateAccount() {
     }
     return (
         <Wrapper>
-            <Title>Join ✔</Title>
+            <Title>회원가입 ✔</Title>
             <Form onSubmit={onSubmit}>
-                <Input onChange={onChange} name="name" value={name} placeholder="Name" type="text" required />
-                <Input onChange={onChange} name="email" value={email} placeholder="email" type="email" required />
-                <Input onChange={onChange} name="password" value={password} placeholder="password" type="password" required />
-                <Input type="submit" value={isLoading?"Loading...":"Create Account"} />
+                <Input onChange={onChange} name="name" value={name} placeholder="이름" type="text" required />
+                <Input onChange={onChange} name="email" value={email} placeholder="이메일" type="email" required />
+                <Input onChange={onChange} name="password" value={password} placeholder="비밀번호" type="password" required />
+                <Input type="submit" value={isLoading?"회원가입 중...":"회원가입"} />
             </Form>
             {error !== "" ? <Error>{error}</Error>:null}
             <Switcher>
                 이미 계정이 있으신가요?{""}
-                <Link to="/login">Log in &rarr;</Link>
+                <Link to="/login">로그인 &rarr;</Link>
             </Switcher>
         </Wrapper>
     );

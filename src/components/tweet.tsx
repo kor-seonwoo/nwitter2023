@@ -197,6 +197,8 @@ export default function Tweet({ username, photo, tweet, userId, id, createdAt}:I
             if (doc.exists()) {
                 const { hasProfileImage } = doc.data();
                 setAvatar(hasProfileImage);
+            }else{
+                setAvatar(user?.photoURL as string);
             }
         });
         return unsub;
