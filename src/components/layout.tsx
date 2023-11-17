@@ -157,6 +157,7 @@ export default function Layout() {
     const [roomModalOn , setRoomMoadlOn] = useState(false);
     const [tweetModalOn , setTweetMoadlOn] = useState(false);
     const [roomDocId , setRoomDocId] = useState<string>("openTweet");
+    const [enteredRoomId, setEnteredRoomId] = useState<string | null>(null);
     const [avatar, setAvatar] = useState("");
     const [name, setName] = useState("");
     const navigate = useNavigate();
@@ -198,7 +199,7 @@ export default function Layout() {
             <Menu>
                 <Nav>
                     <h1>
-                        <Link to="/" onClick={() => setRoomDocId("openTweet")}>
+                        <Link to="/" onClick={() => {setRoomDocId("openTweet"); setEnteredRoomId(null);}}>
                             <img src={import.meta.env.VITE_PUBLIC_URL + "/logo.png"} alt="무엇이든 적어보살" />
                         </Link>
                     </h1>
@@ -214,18 +215,18 @@ export default function Layout() {
                         </span>
                         <p className="name">{name}</p>
                     </CurrentUserBox>
-                    <Link to={profileLink}><MenuItem>프로필</MenuItem></Link>
+                    <Link to={profileLink} onClick={() => setEnteredRoomId(null)}><MenuItem>프로필</MenuItem></Link>
                     <MenuItem onClick={onLogOut} className="log-out">로그아웃</MenuItem>
                 </Nav>
                 <Room>
                     <OpenBtn onClick={() => setTweetMoadlOn(!tweetModalOn)} bgcolor="#1D9BF9" fontcolor="#ffffff">게시물 작성 <span>+</span></OpenBtn>
                     <OpenBtn onClick={() => setRoomMoadlOn(true)} bgcolor="#ffffff" fontcolor="#1D9BF9" bordercolor="#1D9BF9">그룹 만들기 <span>+</span></OpenBtn>
-                    <Link to="/" onClick={() => setRoomDocId("openTweet")}><OpenBtn bgcolor="#E2E2E2" fontcolor="#1D1D1F">홈</OpenBtn></Link>
-                    <RoomList setRoomDocId={setRoomDocId} />
+                    <Link to="/" onClick={() => {setRoomDocId("openTweet"); setEnteredRoomId(null);}}><OpenBtn bgcolor="#E2E2E2" fontcolor="#1D1D1F">홈</OpenBtn></Link>
+                    <RoomList setRoomDocId={setRoomDocId} setEnteredRoomId={setEnteredRoomId} enteredRoomId={enteredRoomId} />
                     {roomModalOn ? <RoomMakeForm modalDelete={setRoomMoadlOn} /> : null}
                 </Room>
             </Menu>
-            <Outlet context={{ tweetModalOn, roomDocId }} />
+            <Outlet context={{ tweetModalOn, roomDocId, setEnteredRoomId }} />
         </Wrapper>
     );
 }

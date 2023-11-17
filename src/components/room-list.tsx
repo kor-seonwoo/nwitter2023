@@ -20,6 +20,8 @@ export interface IRoomMember {
 
 interface RoomDocIdFormProps {
     setRoomDocId: React.Dispatch<React.SetStateAction<string>>;
+    setEnteredRoomId: React.Dispatch<React.SetStateAction<string | null>>;
+    enteredRoomId: string | null;
 }
 
 const Wrapper = styled.div`
@@ -134,7 +136,7 @@ const RoomBtn2 = styled.input<RoomBtn2Props>`
     }
 `;
 
-export default function RoomList({setRoomDocId} : RoomDocIdFormProps) {
+export default function RoomList({setRoomDocId, setEnteredRoomId, enteredRoomId} : RoomDocIdFormProps) {
     const user = auth.currentUser;
     const [rooms, setRooms] = useState<IRoom[]>([]);
     const navigate = useNavigate();
@@ -183,6 +185,7 @@ export default function RoomList({setRoomDocId} : RoomDocIdFormProps) {
                             userListCnt: increment(-1),
                         });
                         alert(`"${roomData.roomname}" 그룹에서 탈퇴하였습니다.`);
+                        setRoomDocId("openTweet");
                     }else{
                         alert(`"${roomData.roomname}" 그룹 탈퇴를 취소하였습니다.`);
                     }
@@ -206,6 +209,7 @@ export default function RoomList({setRoomDocId} : RoomDocIdFormProps) {
                             }
                         }
                         alert(`"${roomData.roomname}" 그룹에 가입 되었습니다.`);
+                        setRoomDocId(target.dataset.id as string);
                     }else{
                         alert(`"${roomData.roomname}" 그룹에 가입을 취소하였습니다.`);
                     }
@@ -227,6 +231,7 @@ export default function RoomList({setRoomDocId} : RoomDocIdFormProps) {
                     if(confirm(`"${roomData.roomname}" 그룹을 정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)){
                         await deleteDoc(roomRef);  // Delete the document
                         alert(`"${roomData.roomname}" 그룹이 성공적으로 삭제되었습니다.`);
+                        setRoomDocId("openTweet");
                     }else{
                         alert(`"${roomData.roomname}" 그룹 삭제가 취소되었습니다.`);
                     }
@@ -242,7 +247,7 @@ export default function RoomList({setRoomDocId} : RoomDocIdFormProps) {
     const numberPad = (n:string, width:number) => {
         n = n + '';
         return n.length >= width ? n : new Array(width - n.length + 1).join('0') + n;
-      }
+    }
     return (
         <Wrapper>
             <RoomUl>
@@ -264,7 +269,8 @@ export default function RoomList({setRoomDocId} : RoomDocIdFormProps) {
                                 : 
                                 <RoomBtn2 type="button" onClick={onClickRoomInOut} value="그룹 탈퇴" data-id={room.id} bordercolor="#AAAAAA" />
                                 }
-                                <RoomBtn2 type="button" onClick={() => {setRoomDocId(room.id); navigateToHome(); }} value="그룹 입장" bgcolor="#7D7D7D" />
+                                <RoomBtn2 type="button" onClick={() => {setRoomDocId(room.id); navigateToHome(); setEnteredRoomId(room.id); }} value={enteredRoomId === room.id ? "선택됨" : "그룹 입장"} bgcolor={enteredRoomId === room.id ? "#1D9BF9":"#7D7D7D" }/>
+                                {/* <RoomBtn2 type="button" onClick={() => {setRoomDocId(room.id); navigateToHome(); }} value="그룹 입장" bgcolor="#7D7D7D" /> */}
                             </div>
                             }
                         </RoomBtn>
