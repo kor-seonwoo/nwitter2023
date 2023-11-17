@@ -4,7 +4,7 @@ import { auth, db } from "../firebase";
 import RoomMakeForm from "./room-make-form";
 import { useState, useMemo, useEffect } from "react";
 import RoomList from "./room-list";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 
 const Wrapper = styled.div`
     display: flex;
@@ -158,6 +158,7 @@ export default function Layout() {
     const [tweetModalOn , setTweetMoadlOn] = useState(false);
     const [roomDocId , setRoomDocId] = useState<string>("openTweet");
     const [avatar, setAvatar] = useState("");
+    const [name, setName] = useState("");
     const navigate = useNavigate();
     const profileLink = useMemo(() => `/profile/${user?.uid}`, [user?.uid]);
     const onLogOut = async () => {
@@ -168,13 +169,26 @@ export default function Layout() {
         }
     }
     const fetchUser = async () => {
-        const docSnapshot = await getDoc(docRefUserList);
-        if (docSnapshot.exists()) {
-            const { hasProfileImage } = docSnapshot.data();
-            setAvatar(hasProfileImage);
-        } else { // 소셜회원
-            setAvatar(user?.photoURL as string);
-        }
+        // const docSnapshot = await getDoc(docRefUserList);
+        // if (docSnapshot.exists()) {
+        //     const { hasProfileImage, name } = docSnapshot.data();
+        //     setAvatar(hasProfileImage);
+        //     setName(name);
+        // } else { // 소셜회원
+        //     setAvatar(user?.photoURL as string);
+        // }
+
+        const unsub = onSnapshot(docRefUserList, (doc) => {
+            if (doc.exists()) {
+                const { hasProfileImage, name } = doc.data();
+                setAvatar(hasProfileImage);
+                setName(name);
+            }else{
+                setName(user?.displayName as string);
+                setAvatar(user?.photoURL as string);
+            }
+        });
+        return unsub;
     };
     useEffect(() => {
         fetchUser();
@@ -198,7 +212,7 @@ export default function Layout() {
                             </svg>
                             }
                         </span>
-                        <p className="name">{user?.displayName}</p>
+                        <p className="name">{name}</p>
                     </CurrentUserBox>
                     <Link to={profileLink}><MenuItem>프로필</MenuItem></Link>
                     <MenuItem onClick={onLogOut} className="log-out">로그아웃</MenuItem>
